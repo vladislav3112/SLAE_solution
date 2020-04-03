@@ -4,21 +4,38 @@
 using namespace std;
 
 void LU(vector <vector <double>> A, vector <vector <double>> &L,
-	vector <vector <double>> &U, int n,vector<double>transp)
+	vector <vector <double>> &U, int n,vector<int>transp) // transp - vector перестановок
 {
 	U = A;
-	for (int i = 0; i < n; i++)  transp[i] = 0; 
+	vector<double> tmp(n);
+	transp.clear();
 	for (int i = 0; i < n; i++)
 		for (int j = i; j < n; j++) {
 			if (U[i][i] != 0)L[j][i] = U[j][i] / U[i][i];//Если U[i][i]=0,то U[j]- в конец.
-			else transp[i]=i;
+			else {
+				transp.push_back(i);
+				tmp = U[i];
+				for (int idx = i; idx++; idx < n-1)  //перестановка строки в конец
+				{
+					U[idx] = U[idx + 1];
+				}
+				U[n - 1] = tmp;
+			}
 		}
 	for (int k = 1; k < n; k++)
 	{
 		for (int i = k - 1; i < n; i++)
 			for (int j = i; j < n; j++) {
 				if(U[i][i]!=0)L[j][i] = U[j][i] / U[i][i];//Если U[i][i]=0,то U[j]- в конец.
-				else transp[i]=i;
+				else {
+					transp.push_back(i);
+					tmp = U[n - 1];
+					for (int idx = i; idx++; idx < n - 1)  //перестановка строки в конец
+					{
+						U[idx] = U[idx + 1];
+					}
+					U[n - 1] = tmp;
+				}
 			}
 		for (int i = k; i < n; i++)
 			for (int j = k - 1; j < n; j++)
@@ -48,7 +65,7 @@ void show(vector <vector <double>> A, int n)
 	}
 }
 void slae_solution(vector <vector <double>> L,
-	vector <vector <double>> U, vector<double>b, vector<double>&x, int n) {
+	vector <vector <double>> U, vector<double>b, vector<double>&x, vector<int> transp, int n) {
 	double sum = 0;
 	vector <double> y(n);
 	//1 step  Ly=b,  where Ux=y :
@@ -74,7 +91,19 @@ void slae_solution(vector <vector <double>> L,
 		}
 		x[i] = (x[i] + y[i]) / U[i][i];
 	}
-
+	double tmp;
+	int i;
+	//перестановка решений в зависимости от вектора перестановок:
+	while (!transp.empty()) {
+		i = transp.back();
+		transp.pop_back();
+		tmp = x[n - 1];
+		for (int idx = i+1; idx++; idx < n - 1)  //перестановка строки в конец
+		{
+			x[idx] = x[idx-1];
+		}
+		x[i] = tmp;
+	}
 }
 
 void reverse_matrix(vector <vector <double>> L,
@@ -154,7 +183,7 @@ int main()
 	cout << "detA= " <<det<<endl;
 	cout << "b=  "<<endl;
 	for (int i = 0; i < n; i++) cout << b[i] << " " << endl;
-	slae_solution(L, U, b, x, n);
+	slae_solution(L, U, b, x, transporation, n);
 	cout << "x=  " << endl;
 	for (int i = 0; i < n; i++) cout << x[i] << " " << endl;
 	reverse_matrix(L, U, b, A_1, n);
